@@ -1,0 +1,17 @@
+{
+  "EMAIL_EXISTS": "Почта уже зарегистрирована",
+  "INVALID_CREDENTIALS": "Неверный логин или пароль",
+  "AUTH_MISSING_BEARER": "Отсутствует Bearer токен",
+  "AUTH_INVALID_TOKEN": "Некорректный токен",
+  "USER_NOT_FOUND": "Пользователь не найден",
+  "ADMIN_ONLY": "Доступно только администратору",
+  "ZONE_CODE_EXISTS": "Код зоны уже существует",
+  "ZONE_NOT_FOUND": "Зона не найдена",
+  "SEAT_NOT_FOUND": "Место не найдено",
+  "START_ALIGN": "start_time должен быть на целый час",
+  "HOURS_MIN": "hours должен быть ≥ 1",
+  "SLOT_CONFLICT": "Временной слот уже занят",
+  "TEMP_LOCKED": "Место/время временно заблокировано, попробуйте ещё раз",
+  "CANNOT_CANCEL": "Нельзя отменить в текущем статусе",
+  "BOOKING_NOT_FOUND": "Бронь не найдена"
+}

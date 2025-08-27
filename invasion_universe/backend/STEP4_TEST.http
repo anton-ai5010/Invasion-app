@@ -1,0 +1,83 @@
+# Шаг 4: Тестирование ролей, Redis-локов и админ эндпоинтов
+
+@base_url = http://localhost:8000
+@admin_token = YOUR_ADMIN_TOKEN_HERE
+@user_token = YOUR_USER_TOKEN_HERE
+
+### 1. Логин как админ (user с id=1 теперь админ)
+POST {{base_url}}/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=test@example.com&password=testpass123
+
+### 2. Проверка роли админа
+GET {{base_url}}/auth/me
+Authorization: Bearer {{admin_token}}
+
+### 3. Попытка создать зону без админских прав (должна вернуть 403)
+POST {{base_url}}/zones
+Content-Type: application/json
+Authorization: Bearer {{user_token}}
+
+{
+  "name": "VIP Zone",
+  "code": "VIP"
+}
+
+### 4. Создание зоны с админскими правами
+POST {{base_url}}/zones
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "name": "VIP Zone", 
+  "code": "VIP"
+}
+
+### 5. Создание места с админскими правами
+POST {{base_url}}/zones/1/seats
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "label": "VIP-01",
+  "seat_type": "FOCUS",
+  "hourly_price_rub": 500
+}
+
+### 6. Создание бронирования для теста админ эндпоинтов
+POST {{base_url}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "seat_id": 1,
+  "start_time": "2025-09-01T10:00:00Z",
+  "hours": 2
+}
+
+### 7. Админ: пометить бронь как оплаченную
+POST {{base_url}}/admin/bookings/1/mark_paid
+Authorization: Bearer {{admin_token}}
+
+### 8. Админ: завершить бронь
+POST {{base_url}}/admin/bookings/1/complete
+Authorization: Bearer {{admin_token}}
+
+### 9. Админ: пометить как no-show (тест на другой брони)
+# Сначала создайте новую бронь, затем:
+POST {{base_url}}/admin/bookings/2/no_show
+Authorization: Bearer {{admin_token}}
+
+### 10. Тест Redis локов - попытка создать две брони одновременно
+# Откройте два терминала и запустите эти запросы одновременно
+# Один должен успешно создаться, второй получит 409
+POST {{base_url}}/bookings
+Content-Type: application/json
+Authorization: Bearer {{admin_token}}
+
+{
+  "seat_id": 1,
+  "start_time": "2025-09-02T14:00:00Z",
+  "hours": 3
+}

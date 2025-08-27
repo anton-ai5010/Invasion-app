@@ -1,0 +1,137 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Invasion API",
+  "dateExported": "2025-08-27T10:00:00.000Z",
+  "version": "1.1",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "register",
+      "colId": "invasion-api",
+      "containerId": "",
+      "name": "Register",
+      "url": "http://localhost:8000/auth/register",
+      "method": "POST",
+      "sortNum": 10000,
+      "created": "2025-08-27T10:00:00.000Z",
+      "modified": "2025-08-27T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"test@example.com\",\n  \"username\": \"testuser\",\n  \"password\": \"testpass123\"\n}",
+        "form": []
+      }
+    },
+    {
+      "_id": "login",
+      "colId": "invasion-api",
+      "containerId": "",
+      "name": "Login",
+      "url": "http://localhost:8000/auth/login",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2025-08-27T10:00:00.000Z",
+      "modified": "2025-08-27T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/x-www-form-urlencoded"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "formencoded",
+        "raw": "",
+        "form": [
+          {
+            "name": "username",
+            "value": "testuser"
+          },
+          {
+            "name": "password",
+            "value": "testpass123"
+          }
+        ]
+      }
+    },
+    {
+      "_id": "get-current-user",
+      "colId": "invasion-api",
+      "containerId": "",
+      "name": "Get Current User",
+      "url": "http://localhost:8000/auth/me",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2025-08-27T10:00:00.000Z",
+      "modified": "2025-08-27T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{access_token}}"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "",
+        "form": []
+      }
+    },
+    {
+      "_id": "get-all-characters",
+      "colId": "invasion-api",
+      "containerId": "",
+      "name": "Get All Characters",
+      "url": "http://localhost:8000/characters/",
+      "method": "GET",
+      "sortNum": 40000,
+      "created": "2025-08-27T10:00:00.000Z",
+      "modified": "2025-08-27T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{access_token}}"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "",
+        "form": []
+      }
+    },
+    {
+      "_id": "create-character",
+      "colId": "invasion-api",
+      "containerId": "",
+      "name": "Create Character",
+      "url": "http://localhost:8000/characters/",
+      "method": "POST",
+      "sortNum": 50000,
+      "created": "2025-08-27T10:00:00.000Z",
+      "modified": "2025-08-27T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{access_token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Commander Alpha\",\n  \"class\": \"SOLDIER\"\n}",
+        "form": []
+      }
+    }
+  ]
+}

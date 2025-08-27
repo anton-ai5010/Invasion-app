@@ -1,0 +1,10 @@
+{
+  "tiers": [
+    { "threshold_hours": 24, "penalty_percent": 0 },
+    { "threshold_hours": 2,  "penalty_percent": 50 },
+    { "threshold_hours": 0,  "penalty_percent": 100 }
+  ],
+  "loyalty_modifiers": {
+    "New": 0
+  }
+}

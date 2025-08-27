@@ -1,0 +1,18 @@
+{
+  "client": "Thunder Client",
+  "environmentName": "Local",
+  "dateExported": "2025-08-27T10:00:00.000Z",
+  "version": "1.0",
+  "variables": [
+    {
+      "name": "base_url",
+      "value": "http://localhost:8000",
+      "enabled": true
+    },
+    {
+      "name": "access_token",
+      "value": "",
+      "enabled": true
+    }
+  ]
+}

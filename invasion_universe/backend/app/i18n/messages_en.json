@@ -1,0 +1,17 @@
+{
+  "EMAIL_EXISTS": "Email already registered",
+  "INVALID_CREDENTIALS": "Invalid credentials",
+  "AUTH_MISSING_BEARER": "Missing bearer token",
+  "AUTH_INVALID_TOKEN": "Invalid token",
+  "USER_NOT_FOUND": "User not found",
+  "ADMIN_ONLY": "Admin only",
+  "ZONE_CODE_EXISTS": "Zone code already exists",
+  "ZONE_NOT_FOUND": "Zone not found",
+  "SEAT_NOT_FOUND": "Seat not found",
+  "START_ALIGN": "start_time must be aligned to full hour",
+  "HOURS_MIN": "hours must be >= 1",
+  "SLOT_CONFLICT": "Time slot is already booked",
+  "TEMP_LOCKED": "Seat/time is temporarily locked, try again",
+  "CANNOT_CANCEL": "Cannot cancel in current status",
+  "BOOKING_NOT_FOUND": "Booking not found"
+}

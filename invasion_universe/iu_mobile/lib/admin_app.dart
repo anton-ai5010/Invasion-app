@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'models.dart';
 import 'admin/dashboard.dart';
+import 'ui/theme.dart';
 
 late Api api;
 
@@ -59,27 +60,17 @@ class _AdminAppState extends State<AdminApp> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeData(
-      brightness: Brightness.dark,
-      useMaterial3: true,
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFF7A4DD8),
-        secondary: Color(0xFF00C2FF),
-        surface: Color(0xFF16181D),
-      ),
-    );
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Invasion Admin',
-      theme: theme,
+      theme: IUTheme.dark(),
       home: _checking
           ? const Scaffold(
               body: Center(child: CircularProgressIndicator()),
             )
           : _user == null || _user!.role != 'admin'
               ? AuthScreen(onAuthed: _onAuthed)
-              : AdminDashboard(onLogout: _onLogout),
+              : AdminDashboard(api: api, onLogout: _onLogout),
     );
   }
 }

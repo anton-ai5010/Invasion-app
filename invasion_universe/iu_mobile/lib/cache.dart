@@ -17,7 +17,10 @@ class Cache {
     if (raw == null) return null;
     try {
       final m = json.decode(raw) as Map<String, dynamic>;
-      final exp = DateTime.tryParse(m['expiresAt'] as String? ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final expiresAtValue = m['expiresAt'];
+      final exp = (expiresAtValue is String) 
+          ? DateTime.tryParse(expiresAtValue) ?? DateTime.fromMillisecondsSinceEpoch(0)
+          : DateTime.fromMillisecondsSinceEpoch(0);
       if (DateTime.now().isAfter(exp)) {
         await sp.remove(key);
         return null;

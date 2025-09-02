@@ -47,12 +47,19 @@ class Api {
 
   Future<bool> _hasNetwork() async {
     final res = await Connectivity().checkConnectivity();
+    // На iOS симуляторе connectivity_plus может возвращать none
+    // даже когда есть подключение, поэтому добавляем проверку
+    if (res.contains(ConnectivityResult.none) && baseUrl.contains('127.0.0.1')) {
+      // Для локальной разработки считаем что сеть есть
+      return true;
+    }
     return res.contains(ConnectivityResult.mobile) || 
            res.contains(ConnectivityResult.wifi) || 
-           res.contains(ConnectivityResult.ethernet);
+           res.contains(ConnectivityResult.ethernet) ||
+           res.contains(ConnectivityResult.other);
   }
 
-  Future<Map<String, dynamic>> _request(
+  Future<dynamic> _request(
     String method,
     String path, {
     Map<String, dynamic>? body,
@@ -88,10 +95,22 @@ class Api {
       }
       return jsonDecode(response.body);
     } else {
-      final error = jsonDecode(response.body);
+      Map<String, dynamic> error;
+      try {
+        error = jsonDecode(response.body);
+      } catch (_) {
+        error = {'code': 'PARSE_ERROR', 'detail': 'Failed to parse error response'};
+      }
+      
+      // Безопасное извлечение строковых значений
+      final errorCode = error['code']?.toString() ?? 'UNKNOWN_ERROR';
+      final errorDetail = error['detail']?.toString() ?? 
+                         error['message']?.toString() ?? 
+                         'Unknown error';
+      
       throw ApiException(
-        code: error['code'] ?? 'UNKNOWN_ERROR',
-        message: error['detail'] ?? 'Unknown error',
+        code: errorCode,
+        message: errorDetail,
       );
     }
   }
@@ -113,20 +132,33 @@ class Api {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept-Language': _locale,
       },
-      body: {
-        'username': email,
-        'password': password,
-      },
+      body: 'username=${Uri.encodeComponent(email)}&password=${Uri.encodeComponent(password)}',
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      await setToken(data['access_token']);
+      final token = data['access_token'];
+      if (token == null || token is! String) {
+        throw ApiException(code: 'INVALID_RESPONSE', message: 'Invalid access token in response');
+      }
+      await setToken(token);
     } else {
-      final error = jsonDecode(response.body);
+      Map<String, dynamic> error;
+      try {
+        error = jsonDecode(response.body);
+      } catch (_) {
+        error = {'code': 'PARSE_ERROR', 'detail': 'Failed to parse error response'};
+      }
+      
+      // Безопасное извлечение строковых значений
+      final errorCode = error['code']?.toString() ?? 'UNKNOWN_ERROR';
+      final errorDetail = error['detail']?.toString() ?? 
+                         error['message']?.toString() ?? 
+                         'Unknown error';
+      
       throw ApiException(
-        code: error['code'] ?? 'UNKNOWN_ERROR',
-        message: error['detail'] ?? 'Unknown error',
+        code: errorCode,
+        message: errorDetail,
       );
     }
   }
@@ -161,7 +193,7 @@ class Api {
     }
     final data = await _request('GET', '/zones');
     final list = data as List;
-    await Cache.setJson(key, list, ttl: const Duration(minutes: 10));
+    await Cache.setJson(key, {'_list': list}, ttl: const Duration(minutes: 10));
     return list.map((z) => Zone.fromJson(z)).toList();
   }
 
@@ -192,12 +224,12 @@ class Api {
   }
 
   Future<List<Booking>> getMyBookings() async {
-    final data = await _request('GET', '/bookings');
+    final data = await _request('GET', '/bookings/me');
     return (data as List).map((b) => Booking.fromJson(b)).toList();
   }
 
   Future<Booking> cancelBooking(int bookingId) async {
-    final data = await _request('POST', '/bookings/$bookingId/cancel');
+    final data = await _request('DELETE', '/bookings/$bookingId');
     return Booking.fromJson(data);
   }
 
@@ -208,13 +240,14 @@ class Api {
     int? seatId,
   }) async {
     final params = {
-      'date_utc': date.toUtc().toIso8601String().split('T')[0],
+      'date_str': date.toUtc().toIso8601String().split('T')[0],
     };
     if (zoneId != null) params['zone_id'] = zoneId.toString();
     if (seatId != null) params['seat_id'] = seatId.toString();
 
-    final data = await _request('GET', '/availability/seats', queryParams: params);
-    return (data as List).map((s) => SeatAvailability.fromJson(s)).toList();
+    final data = await _request('GET', '/bookings/availability', queryParams: params);
+    final response = data as Map<String, dynamic>;
+    return (response['items'] as List).map((s) => SeatAvailability.fromJson(s)).toList();
   }
 
   // Admin methods
@@ -222,8 +255,7 @@ class Api {
     final qp = <String, String>{};
     if (zoneId != null) qp['zone_id'] = '$zoneId';
     final data = await _request('GET', '/admin/bookings/today', queryParams: qp);
-    final map = data as Map<String, dynamic>;
-    final items = (map['items'] as List).cast<Map<String, dynamic>>();
+    final items = (data['items'] as List).cast<Map<String, dynamic>>();
     return items.map((e) => AdminBooking.fromJson(e)).toList();
   }
 

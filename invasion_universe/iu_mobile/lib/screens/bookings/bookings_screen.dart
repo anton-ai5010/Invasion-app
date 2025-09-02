@@ -192,7 +192,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
           : _error != null
               ? EmptyState(
                   message: _error!,
-                  icon: Icons.error_outline,
                   onRetry: _loadBookings,
                 )
               : RefreshIndicator(
@@ -204,7 +203,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
                               height: MediaQuery.of(context).size.height * 0.7,
                               child: const EmptyState(
                                 message: 'У вас пока нет броней',
-                                icon: Icons.bookmark_border,
                               ),
                             ),
                           ],
@@ -250,7 +248,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                             decoration: BoxDecoration(
                                               color: _getStatusColor(
                                                       booking.status)
-                                                  .withOpacity(0.2),
+                                                  .withValues(alpha: 0.2),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),

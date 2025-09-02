@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../main.dart';
+import 'package:data_table_2/data_table_2.dart';
+import '../api.dart';
 import '../models.dart';
+import '../ui/theme.dart';
 import 'zone_pricing.dart';
 
 class AdminDashboard extends StatefulWidget {
+  final Api api;
   final VoidCallback? onLogout;
 
-  const AdminDashboard({super.key, this.onLogout});
+  const AdminDashboard({super.key, required this.api, this.onLogout});
 
   @override
   State<AdminDashboard> createState() => _AdminDashboardState();
@@ -32,7 +35,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       _error = null;
     });
     try {
-      _zones = await api.getZones();
+      _zones = await widget.api.getZones();
       await _loadToday();
     } catch (e) {
       _error = e.toString();
@@ -42,7 +45,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Future<void> _loadToday() async {
-    _items = await api.adminBookingsToday(zoneId: _selectedZoneId);
+    _items = await widget.api.adminBookingsToday(zoneId: _selectedZoneId);
     setState(() {});
   }
 
@@ -50,13 +53,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     try {
       switch (action) {
         case 'paid':
-          await api.adminMarkPaid(b.id);
+          await widget.api.adminMarkPaid(b.id);
           break;
         case 'complete':
-          await api.adminComplete(b.id);
+          await widget.api.adminComplete(b.id);
           break;
         case 'no_show':
-          await api.adminNoShow(b.id);
+          await widget.api.adminNoShow(b.id);
           break;
       }
       await _loadToday();
@@ -140,18 +143,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Expanded(
                       child: list == null
                           ? const Center(child: CircularProgressIndicator())
-                          : SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('ID')),
-                                  DataColumn(label: Text('Статус')),
-                                  DataColumn(label: Text('Время')),
-                                  DataColumn(label: Text('Место')),
-                                  DataColumn(label: Text('Email')),
-                                  DataColumn(label: Text('Действия')),
-                                ],
-                                rows: list.map((b) {
+                          : DataTable2(
+                              headingRowHeight: 44,
+                              dataRowHeight: 48,
+                              columnSpacing: 12,
+                              fixedTopRows: 1,
+                              columns: const [
+                                DataColumn2(label: Text('ID'), size: ColumnSize.S),
+                                DataColumn2(label: Text('Статус'), size: ColumnSize.S),
+                                DataColumn2(label: Text('Время'), size: ColumnSize.M),
+                                DataColumn2(label: Text('Место'), size: ColumnSize.S),
+                                DataColumn2(label: Text('Email'), size: ColumnSize.L),
+                                DataColumn2(label: Text('Действия'), size: ColumnSize.M),
+                              ],
+                              rows: list.map((b) {
                                   final t =
                                       '${DateFormat('HH:mm').format(b.startTime.toLocal())}-${DateFormat('HH:mm').format(b.endTime.toLocal())}';
                                   return DataRow(cells: [
@@ -202,7 +207,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     )),
                                   ]);
                                 }).toList(),
-                              ),
                             ),
                     )
                   ],
@@ -213,13 +217,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'pending':
-        return Colors.orange;
+        return IUTheme.warn;
       case 'paid':
-        return Colors.green;
+        return IUTheme.success;
       case 'completed':
-        return Colors.blue;
+        return IUTheme.secondary;
       case 'no_show':
-        return Colors.red;
+        return IUTheme.danger;
       case 'cancelled':
         return Colors.grey;
       default:

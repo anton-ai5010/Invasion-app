@@ -1,5 +1,4 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter/material.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 class Notifier {
@@ -13,7 +12,16 @@ class Notifier {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
-    final init = InitializationSettings(android: androidInit, iOS: iosInit);
+    final macOSInit = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+    final init = InitializationSettings(
+      android: androidInit, 
+      iOS: iosInit,
+      macOS: macOSInit,
+    );
     await _plugin.initialize(init);
     _ready = true;
   }
@@ -34,7 +42,12 @@ class Notifier {
       importance: Importance.defaultImportance, priority: Priority.defaultPriority,
     );
     const ios = DarwinNotificationDetails();
-    final details = NotificationDetails(android: android, iOS: ios);
+    const macOS = DarwinNotificationDetails();
+    final details = NotificationDetails(
+      android: android, 
+      iOS: ios,
+      macOS: macOS,
+    );
 
     await _plugin.zonedSchedule(
       bookingId,

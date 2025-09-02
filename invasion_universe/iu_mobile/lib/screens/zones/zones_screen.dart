@@ -14,10 +14,7 @@ class ZonesScreen extends StatefulWidget {
 }
 
 class _ZonesScreenState extends State<ZonesScreen> {
-  User? _user;
-  List<Zone>? _zones;
-  bool _isLoading = true;
-  String? _error;
+  Future<List<Zone>>? _zonesFuture;
 
   @override
   void initState() {
@@ -25,55 +22,18 @@ class _ZonesScreenState extends State<ZonesScreen> {
     _loadData();
   }
 
-  Future<void> _loadData({bool force = false}) async {
-    if (!force && _zones != null) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-    
-    try {
-      final user = await api.getMe();
-      final zones = await api.getZones(force: force);
-      if (!mounted) return;
-      setState(() {
-        _user = user;
-        _zones = zones;
-        _isLoading = false;
-        _error = null;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
+  void _loadData({bool force = false}) {
+    setState(() {
+      _zonesFuture = api.getZones(force: force);
+    });
   }
 
   Future<void> _logout() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Выход'),
-        content: const Text('Вы действительно хотите выйти?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Отмена'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Выйти'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      await api.logout();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const AuthScreen()),
+    await api.logout();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+        (route) => false,
       );
     }
   }
@@ -82,111 +42,162 @@ class _ZonesScreenState extends State<ZonesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Выберите зону'),
+        title: Text(
+          'INVASION UNIVERSE',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
-          if (_user != null)
-            PopupMenuButton<String>(
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'profile',
-                  child: ListTile(
-                    leading: const Icon(Icons.person),
-                    title: Text(_user!.email),
-                    subtitle: Text('Роль: ${_user!.role}'),
+          IconButton(
+            icon: const Icon(Icons.event_seat_outlined),
+            tooltip: 'Мои брони',
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const BookingsScreen()));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Выйти',
+            onPressed: _logout,
+          ),
+        ],
+      ),
+      body: RefreshIndicator(
+        onRefresh: () async => _loadData(force: true),
+        child: FutureBuilder<List<Zone>>(
+          future: _zonesFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return EmptyState(message: snapshot.error.toString(), onRetry: () async => _loadData());
+            }
+            final zones = snapshot.data;
+            if (zones == null || zones.isEmpty) {
+              return EmptyState(message: 'Нет доступных зон', onRetry: () async => _loadData());
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(12.0),
+              itemCount: zones.length,
+              itemBuilder: (context, index) {
+                final zone = zones[index];
+                return ZoneCard(zone: zone);
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ZoneCard extends StatelessWidget {
+  final Zone zone;
+  const ZoneCard({super.key, required this.zone});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.surface,
+            theme.colorScheme.surface.withValues(alpha: 0.8),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => ZoneLayoutScreen(zone: zone),
+            ));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.gamepad_outlined,
+                    color: theme.colorScheme.primary,
+                    size: 32,
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'bookings',
-                  child: ListTile(
-                    leading: Icon(Icons.bookmark),
-                    title: Text('Мои брони'),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        zone.name,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        zone.code,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const PopupMenuItem(
-                  value: 'logout',
-                  child: ListTile(
-                    leading: Icon(Icons.logout),
-                    title: Text('Выход'),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 18,
                   ),
                 ),
               ],
-              onSelected: (value) {
-                switch (value) {
-                  case 'bookings':
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const BookingsScreen(),
-                      ),
-                    );
-                    break;
-                  case 'logout':
-                    _logout();
-                    break;
-                }
-              },
             ),
-        ],
+          ),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? EmptyState(
-                  message: _error!,
-                  icon: Icons.error_outline,
-                  onRetry: () => _loadData(force: true),
-                )
-              : RefreshIndicator(
-                  onRefresh: () => _loadData(force: true),
-                  child: _zones!.isEmpty
-                      ? ListView(
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.7,
-                              child: const EmptyState(
-                                message: 'Зоны пока не созданы',
-                                icon: Icons.meeting_room,
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _zones!.length,
-                          itemBuilder: (context, index) {
-                            final zone = _zones![index];
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 16),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: zone.isActive
-                                      ? Theme.of(context).colorScheme.primary
-                                      : Colors.grey,
-                                  child: Text(
-                                    zone.code.substring(0, 1),
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                                title: Text(zone.name),
-                                subtitle: Text('Код: ${zone.code}'),
-                                trailing: zone.isActive
-                                    ? const Icon(Icons.arrow_forward_ios)
-                                    : const Icon(Icons.lock, color: Colors.grey),
-                                enabled: zone.isActive,
-                                onTap: zone.isActive
-                                    ? () {
-                                        Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                ZoneLayoutScreen(zone: zone),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                              ),
-                            );
-                          },
-                        ),
-                ),
     );
   }
 }
